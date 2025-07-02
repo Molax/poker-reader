@@ -6,8 +6,8 @@ import yaml
 import json
 from datetime import datetime
 
-from template_configurator import TemplateConfigurator
-from utils.tooltip import ToolTip
+from config.template_configurator import TemplateConfigurator
+from regions.utils.tooltip import ToolTip
 
 class PokeAnalyzer:
     def __init__(self):

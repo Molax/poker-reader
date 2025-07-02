@@ -1,189 +1,144 @@
 """
-Region definitions for different poker sites
+Optimized region definitions for different poker sites
 """
 
-YAYA_REGIONS = {
-    "tournament_title": {
-        "display_name": "Tournament Title",
-        "description": "Top bar: '$215 - Sunday Special - $100,000 GTD'",
-        "tooltip": "Select the tournament name and buy-in information at the very top",
-        "example": "$215 - Sunday Special - $100,000 GTD",
-        "priority": 1
+YAYA_BASE_REGIONS = {
+    "tournament_header": {
+        "display_name": "Tournament Header",
+        "description": "Complete tournament info: '$215 - Sunday Special - $100,000 GTD, Table 46 - No Limit - 35,000/70,000, Ante 9,000'",
+        "tooltip": "Select the entire top bar containing tournament name, buy-in, table info, and blinds",
+        "example": "$215 - Sunday Special - $100,000 GTD, Table 46 - No Limit - 35,000/70,000, Ante 9,000",
+        "priority": 1,
+        "required": True
     },
-    "table_info": {
-        "display_name": "Table & Blinds Info", 
-        "description": "Table number, blinds, ante: 'Table 46 - No Limit - 35,000/70,000, Ante 9,000'",
-        "tooltip": "Select the table number, limit type, and blind levels",
-        "example": "Table 46 - No Limit - 35,000 / 70,000, Ante 9,000",
-        "priority": 2
+    
+    "position_stats": {
+        "display_name": "Position & Statistics",
+        "description": "Right panel: Position, average stack, prize pool, first place",
+        "tooltip": "Select the entire right panel with position and tournament stats",
+        "example": "Your Position: 11 of 33, Avg Stack: 27.18 BB, Prize Pool: $125,600, 1st Place: $25,953.40",
+        "priority": 2,
+        "required": True
     },
-    "position_info": {
-        "display_name": "Your Position",
-        "description": "Top right: Position and remaining players",
-        "tooltip": "Select 'Your Position: 11 of 33' area",
-        "example": "Your Position: 11 of 33",
-        "priority": 3
+    
+    "hand_history": {
+        "display_name": "Hand Numbers",
+        "description": "Current and previous hand numbers from left panel",
+        "tooltip": "Select the hand number area on the left side",
+        "example": "Current: 2492611261, Previous: 2492610659",
+        "priority": 3,
+        "required": True
     },
-    "avg_stack": {
-        "display_name": "Average Stack",
-        "description": "Average stack in big blinds",
-        "tooltip": "Select 'Avg Stack: 27.18 BB' area",
-        "example": "Avg Stack: 27.18 BB",
-        "priority": 4
+    
+    "pot_info": {
+        "display_name": "Pot Information",
+        "description": "Center table pot amounts: total and current betting round",
+        "tooltip": "Select the pot area in center of table showing total and current pot",
+        "example": "Total: 34.19 BB, Pot: 0.9 BB",
+        "priority": 4,
+        "required": True
     },
-    "prize_pool": {
-        "display_name": "Prize Pool",
-        "description": "Total prize pool amount",
-        "tooltip": "Select 'Prize Pool: $125,600' area",
-        "example": "Prize Pool: $125,600",
-        "priority": 5
+    
+    "hero_info": {
+        "display_name": "Hero (Your) Information",
+        "description": "Your cards, stack, and time bank at bottom center",
+        "tooltip": "Select your cards, stack amount, and timer area at bottom",
+        "example": "5♠ 5♦, 0 BB, 35s",
+        "priority": 5,
+        "required": True
+    }
+}
+
+YAYA_PLAYER_POSITIONS = {
+    2: ["seat_1", "seat_6"],
+    3: ["seat_1", "seat_4", "seat_6"],
+    4: ["seat_1", "seat_3", "seat_4", "seat_6"],
+    5: ["seat_1", "seat_2", "seat_3", "seat_4", "seat_6"],
+    6: ["seat_1", "seat_2", "seat_3", "seat_4", "seat_5", "seat_6"],
+    7: ["seat_1", "seat_2", "seat_3", "seat_4", "seat_5", "seat_6", "seat_7"],
+    8: ["seat_1", "seat_2", "seat_3", "seat_4", "seat_5", "seat_6", "seat_7", "seat_8"],
+    9: ["seat_1", "seat_2", "seat_3", "seat_4", "seat_5", "seat_6", "seat_7", "seat_8", "seat_9"],
+    10: ["seat_1", "seat_2", "seat_3", "seat_4", "seat_5", "seat_6", "seat_7", "seat_8", "seat_9", "seat_10"],
+    11: ["seat_1", "seat_2", "seat_3", "seat_4", "seat_5", "seat_6", "seat_7", "seat_8", "seat_9", "seat_10", "seat_11"]
+}
+
+YAYA_SEAT_DEFINITIONS = {
+    "seat_1": {
+        "display_name": "Player 1 (Top Left)",
+        "description": "Top left player position",
+        "tooltip": "Select the top left player area (name, stack, bet)",
+        "example": "USAWasteland, 13.07 BB, 1 BB",
+        "position": "top_left"
     },
-    "first_place": {
-        "display_name": "1st Place Prize",
-        "description": "First place prize amount",
-        "tooltip": "Select '1st Place: $25,953.40' area",
-        "example": "1st Place: $25,953.40",
-        "priority": 6
+    "seat_2": {
+        "display_name": "Player 2 (Top Right)",
+        "description": "Top right player position",
+        "tooltip": "Select the top right player area (name, stack, bet)",
+        "example": "campana17, 19.04 BB",
+        "position": "top_right"
     },
-    "hand_current": {
-        "display_name": "Current Hand #",
-        "description": "Current hand number",
-        "tooltip": "Select 'Current: 2492611261' area on the left",
-        "example": "Current: 2492611261",
-        "priority": 7
+    "seat_3": {
+        "display_name": "Player 3 (Left)",
+        "description": "Left side player position",
+        "tooltip": "Select the left side player area (name, stack)",
+        "example": "GodsWay, 7.17 BB",
+        "position": "left"
     },
-    "hand_previous": {
-        "display_name": "Previous Hand #",
-        "description": "Previous hand number",
-        "tooltip": "Select 'Previous: 2492610659' area on the left",
-        "example": "Previous: 2492610659",
-        "priority": 8
+    "seat_4": {
+        "display_name": "Player 4 (Right)",
+        "description": "Right side player position",
+        "tooltip": "Select the right side player area (name, stack)",
+        "example": "Chiliquaro, 17.07 BB",
+        "position": "right"
     },
-    "pot_total": {
-        "display_name": "Total Pot",
-        "description": "Center pot amount in BB",
-        "tooltip": "Select 'Total: 34.19 BB' in the center of table",
-        "example": "Total: 34.19 BB",
-        "priority": 9
+    "seat_5": {
+        "display_name": "Player 5 (Bottom Left)",
+        "description": "Bottom left player position",
+        "tooltip": "Select the bottom left player area (name, stack)",
+        "example": "Skrimples, 17.81 BB",
+        "position": "bottom_left"
     },
-    "pot_current": {
-        "display_name": "Current Pot",
-        "description": "Current betting round pot",
-        "tooltip": "Select 'Pot: 0.9 BB' below the total pot",
-        "example": "Pot: 0.9 BB",
-        "priority": 10
+    "seat_6": {
+        "display_name": "Player 6 (Bottom Right)",
+        "description": "Bottom right player position",
+        "tooltip": "Select the bottom right player area (name, stack)",
+        "example": "Push0rdie, 34.72 BB",
+        "position": "bottom_right"
     },
-    "hero_cards": {
-        "display_name": "Your Cards",
-        "description": "Your hole cards at bottom center",
-        "tooltip": "Select your two cards (5♠ 5♦) at bottom center",
-        "example": "5♠ 5♦",
-        "priority": 11
+    "seat_7": {
+        "display_name": "Player 7 (Top Center)",
+        "description": "Top center player position",
+        "tooltip": "Select the top center player area",
+        "example": "Player7, XX.XX BB",
+        "position": "top_center"
     },
-    "hero_stack": {
-        "display_name": "Your Stack",
-        "description": "Your chip stack amount",
-        "tooltip": "Select your stack amount below your cards",
-        "example": "0 BB",
-        "priority": 12
+    "seat_8": {
+        "display_name": "Player 8 (Center Left)",
+        "description": "Center left player position",
+        "tooltip": "Select the center left player area",
+        "example": "Player8, XX.XX BB",
+        "position": "center_left"
     },
-    "time_bank": {
-        "display_name": "Time Bank",
-        "description": "Remaining time for your action",
-        "tooltip": "Select the timer showing remaining seconds",
-        "example": "35",
-        "priority": 13
+    "seat_9": {
+        "display_name": "Player 9 (Center Right)",
+        "description": "Center right player position",
+        "tooltip": "Select the center right player area",
+        "example": "Player9, XX.XX BB",
+        "position": "center_right"
     },
-    "player_1_name": {
-        "display_name": "Player 1 Name (Top Left)",
-        "description": "USAWasteland - Top left position",
-        "tooltip": "Select player name at top left of table",
-        "example": "USAWasteland",
-        "priority": 14
+    "seat_10": {
+        "display_name": "Player 10 (Bottom Center)",
+        "description": "Bottom center player position",
+        "tooltip": "Select the bottom center player area",
+        "example": "Player10, XX.XX BB",
+        "position": "bottom_center"
     },
-    "player_1_stack": {
-        "display_name": "Player 1 Stack",
-        "description": "Stack amount for top left player",
-        "tooltip": "Select stack amount below player 1 name",
-        "example": "13.07 BB",
-        "priority": 15
-    },
-    "player_1_bet": {
-        "display_name": "Player 1 Bet",
-        "description": "Current bet amount for player 1",
-        "tooltip": "Select bet amount near player 1 (1 BB)",
-        "example": "1 BB",
-        "priority": 16
-    },
-    "player_2_name": {
-        "display_name": "Player 2 Name (Top Right)",
-        "description": "campana17 - Top right position",
-        "tooltip": "Select player name at top right (marked as friend)",
-        "example": "campana17",
-        "priority": 17
-    },
-    "player_2_stack": {
-        "display_name": "Player 2 Stack",
-        "description": "Stack amount for top right player",
-        "tooltip": "Select stack amount below player 2 name",
-        "example": "19.04 BB",
-        "priority": 18
-    },
-    "player_3_name": {
-        "display_name": "Player 3 Name (Left)",
-        "description": "GodsWay - Left position",
-        "tooltip": "Select player name on the left side",
-        "example": "GodsWay",
-        "priority": 19
-    },
-    "player_3_stack": {
-        "display_name": "Player 3 Stack",
-        "description": "Stack amount for left player",
-        "tooltip": "Select stack amount below player 3 name",
-        "example": "7.17 BB",
-        "priority": 20
-    },
-    "player_4_name": {
-        "display_name": "Player 4 Name (Right)",
-        "description": "Chiliquaro - Right position",
-        "tooltip": "Select player name on the right side",
-        "example": "Chiliquaro",
-        "priority": 21
-    },
-    "player_4_stack": {
-        "display_name": "Player 4 Stack",
-        "description": "Stack amount for right player",
-        "tooltip": "Select stack amount below player 4 name",
-        "example": "17.07 BB",
-        "priority": 22
-    },
-    "player_5_name": {
-        "display_name": "Player 5 Name (Bottom Left)",
-        "description": "Skrimples - Bottom left position",
-        "tooltip": "Select player name at bottom left",
-        "example": "Skrimples",
-        "priority": 23
-    },
-    "player_5_stack": {
-        "display_name": "Player 5 Stack",
-        "description": "Stack amount for bottom left player",
-        "tooltip": "Select stack amount below player 5 name",
-        "example": "17.81 BB",
-        "priority": 24
-    },
-    "player_6_name": {
-        "display_name": "Player 6 Name (Bottom Right)",
-        "description": "Push0rdie - Bottom right position",
-        "tooltip": "Select player name at bottom right",
-        "example": "Push0rdie",
-        "priority": 25
-    },
-    "player_6_stack": {
-        "display_name": "Player 6 Stack",
-        "description": "Stack amount for bottom right player",
-        "tooltip": "Select stack amount below player 6 name",
-        "example": "34.72 BB",
-        "priority": 26
+    "seat_11": {
+        "display_name": "Player 11 (Extra)",
+        "description": "Additional player position",
+        "tooltip": "Select additional player area",
+        "example": "Player11, XX.XX BB",
+        "position": "extra"
     }
 }
 
@@ -204,17 +159,35 @@ POKERSTARS_REGIONS = {
     }
 }
 
-def get_regions_for_site(site):
-    """Get region definitions for specific poker site"""
+def get_yaya_regions_for_player_count(player_count):
+    if player_count < 2 or player_count > 11:
+        raise ValueError("YAYA supports 2-11 players")
+    
+    regions = YAYA_BASE_REGIONS.copy()
+    
+    active_seats = YAYA_PLAYER_POSITIONS[player_count]
+    priority = 6
+    
+    for seat in active_seats:
+        seat_def = YAYA_SEAT_DEFINITIONS[seat]
+        regions[seat] = {
+            **seat_def,
+            "priority": priority,
+            "required": False
+        }
+        priority += 1
+    
+    return regions
+
+def get_regions_for_site(site, player_count=None):
     site_regions = {
-        'yaya': YAYA_REGIONS,
+        'yaya': get_yaya_regions_for_player_count(player_count) if player_count else YAYA_BASE_REGIONS,
         'pokerstars': POKERSTARS_REGIONS,
         'ggpoker': {},
         '888poker': {}
     }
     return site_regions.get(site, {})
 
-def get_sorted_regions(site):
-    """Get regions sorted by priority for easier selection"""
-    regions = get_regions_for_site(site)
+def get_sorted_regions(site, player_count=None):
+    regions = get_regions_for_site(site, player_count)
     return sorted(regions.items(), key=lambda x: x[1].get('priority', 999))
