@@ -21,6 +21,152 @@ except ImportError as e:
     OCR_AVAILABLE = False
     PokerAnalysisEngine = None
 
+class ResultsViewer:
+    def __init__(self, parent, results_data):
+        self.parent = parent
+        self.results_data = results_data
+        
+        self.window = tk.Toplevel(parent)
+        self.window.title("Analysis Results Viewer")
+        self.window.geometry("1200x800")
+        self.window.resizable(True, True)
+        
+        self.setup_ui()
+        self.display_results()
+        
+    def setup_ui(self):
+        main_frame = ttk.Frame(self.window)
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        header_frame = ttk.Frame(main_frame)
+        header_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        title_label = ttk.Label(
+            header_frame, 
+            text=f"Analysis Results - {self.results_data.get('site', 'Unknown').upper()}", 
+            font=('Arial', 16, 'bold')
+        )
+        title_label.pack(side=tk.LEFT)
+        
+        close_btn = ttk.Button(header_frame, text="Close", command=self.window.destroy)
+        close_btn.pack(side=tk.RIGHT)
+        
+        notebook = ttk.Notebook(main_frame)
+        notebook.pack(fill=tk.BOTH, expand=True)
+        
+        self.setup_summary_tab(notebook)
+        self.setup_regions_tab(notebook)
+        self.setup_raw_data_tab(notebook)
+        
+    def setup_summary_tab(self, notebook):
+        summary_frame = ttk.Frame(notebook)
+        notebook.add(summary_frame, text="Summary")
+        
+        canvas = tk.Canvas(summary_frame)
+        scrollbar = ttk.Scrollbar(summary_frame, orient="vertical", command=canvas.yview)
+        scrollable_frame = ttk.Frame(canvas)
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        summary = self.results_data.get('analysis_summary', {})
+        template_info = self.results_data.get('template_info', {})
+        
+        info_frame = ttk.LabelFrame(scrollable_frame, text="Analysis Summary", padding=10)
+        info_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        ttk.Label(info_frame, text=f"Image: {self.results_data.get('image_file', 'Unknown')}", 
+                 font=('Arial', 11, 'bold')).pack(anchor=tk.W)
+        ttk.Label(info_frame, text=f"Site: {self.results_data.get('site', 'Unknown').upper()}", 
+                 font=('Arial', 11, 'bold')).pack(anchor=tk.W)
+        ttk.Label(info_frame, text=f"Timestamp: {self.results_data.get('timestamp', 'Unknown')}", 
+                 font=('Arial', 11)).pack(anchor=tk.W)
+        
+        if template_info.get('player_count'):
+            ttk.Label(info_frame, text=f"Player Count: {template_info['player_count']}", 
+                     font=('Arial', 11)).pack(anchor=tk.W)
+        
+        stats_frame = ttk.LabelFrame(scrollable_frame, text="Extraction Statistics", padding=10)
+        stats_frame.pack(fill=tk.X, pady=(0, 10))
+        
+        successful = summary.get('successful_extractions', 0)
+        failed = summary.get('failed_extractions', 0)
+        total = successful + failed
+        avg_confidence = summary.get('average_confidence', 0)
+        high_confidence = summary.get('high_confidence_count', 0)
+        
+        ttk.Label(stats_frame, text=f"Total Regions: {total}", font=('Arial', 11)).pack(anchor=tk.W)
+        ttk.Label(stats_frame, text=f"Successful Extractions: {successful} ({(successful/total*100) if total > 0 else 0:.1f}%)", 
+                 font=('Arial', 11), foreground='green' if successful > 0 else 'red').pack(anchor=tk.W)
+        ttk.Label(stats_frame, text=f"Failed Extractions: {failed}", 
+                 font=('Arial', 11), foreground='red' if failed > 0 else 'green').pack(anchor=tk.W)
+        ttk.Label(stats_frame, text=f"Average Confidence: {avg_confidence:.1f}%", 
+                 font=('Arial', 11)).pack(anchor=tk.W)
+        ttk.Label(stats_frame, text=f"High Confidence (>70%): {high_confidence}", 
+                 font=('Arial', 11)).pack(anchor=tk.W)
+        
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+    def setup_regions_tab(self, notebook):
+        regions_frame = ttk.Frame(notebook)
+        notebook.add(regions_frame, text="Region Results")
+        
+        tree_frame = ttk.Frame(regions_frame)
+        tree_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        columns = ('Region', 'Success', 'Confidence', 'Method', 'Extracted Text')
+        self.tree = ttk.Treeview(tree_frame, columns=columns, show='headings', height=20)
+        
+        for col in columns:
+            self.tree.heading(col, text=col)
+            
+        self.tree.column('Region', width=200)
+        self.tree.column('Success', width=80)
+        self.tree.column('Confidence', width=100)
+        self.tree.column('Method', width=120)
+        self.tree.column('Extracted Text', width=400)
+        
+        tree_scroll = ttk.Scrollbar(tree_frame, orient=tk.VERTICAL, command=self.tree.yview)
+        self.tree.configure(yscrollcommand=tree_scroll.set)
+        
+        self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        tree_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        extracted_data = self.results_data.get('extracted_data', {})
+        for region_key, data in extracted_data.items():
+            success = "✅ Yes" if data.get('success', False) else "❌ No"
+            confidence = f"{data.get('confidence', 0):.1f}%"
+            method = data.get('method', 'Unknown')
+            text = data.get('text', '').replace('\n', ' ')[:100] + ('...' if len(data.get('text', '')) > 100 else '')
+            
+            self.tree.insert('', tk.END, values=(
+                data.get('display_name', region_key),
+                success,
+                confidence,
+                method,
+                text
+            ))
+        
+    def setup_raw_data_tab(self, notebook):
+        raw_frame = ttk.Frame(notebook)
+        notebook.add(raw_frame, text="Raw Data")
+        
+        text_widget = scrolledtext.ScrolledText(raw_frame, font=('Consolas', 10))
+        text_widget.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        formatted_data = yaml.dump(self.results_data, default_flow_style=False, sort_keys=False)
+        text_widget.insert(tk.END, formatted_data)
+        text_widget.config(state=tk.DISABLED)
+        
+    def display_results(self):
+        pass
+
 class PokeAnalyzer:
     def __init__(self):
         self.root = tk.Tk()
@@ -35,8 +181,14 @@ class PokeAnalyzer:
         self.templates = {}
         self.analysis_engine = PokerAnalysisEngine() if OCR_AVAILABLE else None
         
+        self.setup_directories()
         self.setup_ui()
         self.load_existing_templates()
+        
+    def setup_directories(self):
+        os.makedirs("results", exist_ok=True)
+        os.makedirs("templates", exist_ok=True)
+        os.makedirs("templates/previews", exist_ok=True)
         
     def setup_ui(self):
         main_frame = ttk.Frame(self.root)
@@ -94,6 +246,20 @@ class PokeAnalyzer:
                                      state=tk.DISABLED, width=25)
         self.analyze_btn.pack(side=tk.LEFT, padx=(0, 10))
         ToolTip(self.analyze_btn, "Extract text from all defined regions\nRequires template to be configured first")
+        
+        buttons_frame2 = ttk.Frame(controls_frame)
+        buttons_frame2.pack(fill=tk.X, pady=(10, 0))
+        
+        self.view_results_btn = ttk.Button(buttons_frame2, text="View Last Results", 
+                                          command=self.view_last_results, 
+                                          state=tk.DISABLED, width=20)
+        self.view_results_btn.pack(side=tk.LEFT, padx=(0, 10))
+        ToolTip(self.view_results_btn, "View detailed results from last analysis")
+        
+        self.browse_results_btn = ttk.Button(buttons_frame2, text="Browse All Results", 
+                                            command=self.browse_all_results, width=20)
+        self.browse_results_btn.pack(side=tk.LEFT, padx=(0, 10))
+        ToolTip(self.browse_results_btn, "Browse all saved analysis results")
         
         info_frame = ttk.Frame(controls_frame)
         info_frame.pack(fill=tk.X, pady=(15, 0))
@@ -314,22 +480,161 @@ class PokeAnalyzer:
             analysis_results['timestamp'] = datetime.now().isoformat()
             self.extracted_data = analysis_results
             
+            auto_save_path = self.auto_save_results(analysis_results)
+            
             summary = analysis_results['analysis_summary']
             self.log_message(f"✓ OCR Analysis completed!")
+            self.log_message(f"  → Results auto-saved: {os.path.basename(auto_save_path)}")
             self.log_message(f"  → Successful extractions: {summary['successful_extractions']}/{summary['successful_extractions'] + summary['failed_extractions']}")
             self.log_message(f"  → Average confidence: {summary['average_confidence']:.1f}%")
             self.log_message(f"  → High confidence results: {summary['high_confidence_count']}")
             
             self._log_extraction_details()
             
-            self.status_label.config(text="Analysis complete - Ready to export", foreground='green')
+            self.status_label.config(text="Analysis complete - Results saved", foreground='green')
             self.export_btn.config(state=tk.NORMAL)
+            self.view_results_btn.config(state=tk.NORMAL)
                                     
         except Exception as e:
             error_msg = f"Analysis failed: {str(e)}"
             self.log_message(f"✗ {error_msg}", "ERROR")
             self.status_label.config(text="Analysis failed", foreground='red')
             messagebox.showerror("Analysis Error", error_msg)
+    
+    def auto_save_results(self, analysis_results):
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        if self.poker_site == 'yaya' and 'player_count' in analysis_results.get('template_info', {}):
+            player_count = analysis_results['template_info']['player_count']
+            filename = f"{self.poker_site}_{player_count}p_analysis_{timestamp}.yml"
+        else:
+            filename = f"{self.poker_site}_analysis_{timestamp}.yml"
+        
+        filepath = os.path.join("results", filename)
+        
+        with open(filepath, 'w') as f:
+            yaml.dump(analysis_results, f, default_flow_style=False, 
+                     sort_keys=False, allow_unicode=True)
+        
+        return filepath
+    
+    def view_last_results(self):
+        if not self.extracted_data:
+            messagebox.showwarning("Warning", "No analysis results available")
+            return
+        
+        ResultsViewer(self.root, self.extracted_data)
+    
+    def browse_all_results(self):
+        results_dir = "results"
+        if not os.path.exists(results_dir) or not os.listdir(results_dir):
+            messagebox.showinfo("Info", "No saved results found")
+            return
+        
+        self.show_results_browser()
+    
+    def show_results_browser(self):
+        browser = tk.Toplevel(self.root)
+        browser.title("Results Browser")
+        browser.geometry("800x600")
+        
+        main_frame = ttk.Frame(browser)
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        ttk.Label(main_frame, text="Saved Analysis Results", font=('Arial', 14, 'bold')).pack(pady=(0, 10))
+        
+        tree_frame = ttk.Frame(main_frame)
+        tree_frame.pack(fill=tk.BOTH, expand=True)
+        
+        columns = ('File', 'Site', 'Date', 'Success Rate', 'Avg Confidence')
+        tree = ttk.Treeview(tree_frame, columns=columns, show='headings')
+        
+        for col in columns:
+            tree.heading(col, text=col)
+        
+        tree.column('File', width=200)
+        tree.column('Site', width=80)
+        tree.column('Date', width=150)
+        tree.column('Success Rate', width=100)
+        tree.column('Avg Confidence', width=120)
+        
+        tree_scroll = ttk.Scrollbar(tree_frame, orient=tk.VERTICAL, command=tree.yview)
+        tree.configure(yscrollcommand=tree_scroll.set)
+        
+        results_files = []
+        for filename in os.listdir("results"):
+            if filename.endswith(('.yml', '.yaml', '.json')):
+                try:
+                    filepath = os.path.join("results", filename)
+                    with open(filepath, 'r') as f:
+                        if filename.endswith('.json'):
+                            data = json.load(f)
+                        else:
+                            data = yaml.safe_load(f)
+                    
+                    summary = data.get('analysis_summary', {})
+                    successful = summary.get('successful_extractions', 0)
+                    failed = summary.get('failed_extractions', 0)
+                    total = successful + failed
+                    success_rate = f"{(successful/total*100) if total > 0 else 0:.1f}%"
+                    avg_confidence = f"{summary.get('average_confidence', 0):.1f}%"
+                    
+                    timestamp = data.get('timestamp', '')
+                    if timestamp:
+                        try:
+                            dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                            date_str = dt.strftime("%Y-%m-%d %H:%M")
+                        except:
+                            date_str = timestamp
+                    else:
+                        date_str = "Unknown"
+                    
+                    results_files.append((filename, data, success_rate, avg_confidence, date_str))
+                    
+                except Exception as e:
+                    continue
+        
+        results_files.sort(key=lambda x: x[4], reverse=True)
+        
+        for filename, data, success_rate, avg_confidence, date_str in results_files:
+            tree.insert('', tk.END, values=(
+                filename,
+                data.get('site', 'Unknown').upper(),
+                date_str,
+                success_rate,
+                avg_confidence
+            ))
+        
+        def on_double_click(event):
+            selection = tree.selection()
+            if selection:
+                item = tree.item(selection[0])
+                filename = item['values'][0]
+                
+                try:
+                    filepath = os.path.join("results", filename)
+                    with open(filepath, 'r') as f:
+                        if filename.endswith('.json'):
+                            data = json.load(f)
+                        else:
+                            data = yaml.safe_load(f)
+                    
+                    ResultsViewer(browser, data)
+                except Exception as e:
+                    messagebox.showerror("Error", f"Failed to load results: {str(e)}")
+        
+        tree.bind('<Double-1>', on_double_click)
+        
+        tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        tree_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        button_frame = ttk.Frame(main_frame)
+        button_frame.pack(fill=tk.X, pady=(10, 0))
+        
+        ttk.Label(button_frame, text="Double-click to view detailed results", 
+                 font=('Arial', 10), foreground='gray').pack(side=tk.LEFT)
+        
+        ttk.Button(button_frame, text="Close", command=browser.destroy).pack(side=tk.RIGHT)
             
     def _log_extraction_details(self):
         if not self.extracted_data or 'extracted_data' not in self.extracted_data:
@@ -363,7 +668,7 @@ class PokeAnalyzer:
         file_path = filedialog.asksaveasfilename(
             title="Export Analysis Results",
             defaultextension=".yml",
-            initialname=default_name,
+            initialfile=default_name,
             filetypes=[("YAML files", "*.yml"), ("JSON files", "*.json")]
         )
         
